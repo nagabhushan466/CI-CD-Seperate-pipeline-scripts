@@ -1,0 +1,69 @@
+pipeline{
+agent any
+parameters {
+  choice choices: ['--Select--', 'DEV', 'QA', 'STAG', 'PERF', 'PROD'], description: 'Pls select state', name: 'Environment'
+  booleanParam description: 'Pls select deployment', name: 'Deploy'
+  string defaultValue: 'master', description: 'Pls enter branch name', name: 'Branch'
+}
+tools {
+  maven 'maven_3.8.4'
+}
+stages{
+ stage("parameters_demo"){
+  steps{
+  echo "${params.Deploy}"
+  echo "${params.Branch}"
+  echo "${params.Environment}"
+  }
+ }
+ stage("SCM") {
+      steps {
+        echo 'Pulling source code from github/bitbucket'
+        git branch: '$Branch', changelog: false, credentialsId: 'github_cred', poll: false, url: 'https://github.com/psddevops/sampletest.git'
+        echo 'Source code successfuly cloned . . . .'
+      }
+    }
+ stage("MAVEN") {
+      steps {
+        echo 'Building source code using maven'
+        sh 'echo $PATH'
+        sh 'mvn clean package'
+        echo 'Build completed successfuly . . . .'
+      }
+	  post{
+	  success{
+	        junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+			}
+
+	}
+	}
+ stage("SONAR_SCANNER") {
+      steps {
+        echo 'Sonar scanning our code'
+      }
+    }
+
+ stage("SONAR_QG") {
+      steps {
+        echo 'Verifying quality gates'
+      }
+    }
+ stage("NEXUS") {
+      steps {
+        echo 'Uploading artifacts nexus repo'
+      }
+    }
+}
+post {
+  success {
+   script {
+   if (params.Deploy == true) {
+   build(job: "cd_job", parameters: [string(name: 'Environment', value: "${params.Environment}"),
+    string(name: 'Branch', value: "${params.Branch}"),
+    string(name: 'Deploy', value: "${params.Deploy}")
+    ])
+		}
+		}
+	}
+	}
+}

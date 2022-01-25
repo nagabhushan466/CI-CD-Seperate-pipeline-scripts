@@ -1,0 +1,56 @@
+pipeline{
+agent any
+parameters {
+  string defaultValue: '', description: 'Pls enter branch name', name: 'Branch'
+  string defaultValue: '', description: 'Pls enter Deploy name', name: 'Deploy'
+  string defaultValue: '', description: 'Pls enter branch name', name: 'Environment'
+}
+tools {
+  maven 'maven_3.8.4'
+}
+stages{
+ stage("parameters_demo"){
+  steps{
+  echo "${params.Deploy}"
+  echo "${params.Branch}"
+  echo "${params.Environment}"
+  }
+ }
+stage("DEPLOY") {
+        when{
+		expression { params.Environment== "PROD" }
+		}
+      steps {
+	    echo 'Deploying artifacts to tomcat server'
+		sh '''ssh ubuntu@3.16.108.201 /opt/tomcat/bin/shutdown.sh
+        scp -o StrictHostKeyChecking=no -r /var/lib/jenkins/workspace/ci_job/target/psdapp.war ubuntu@3.16.108.201:/opt/tomcat/webapps
+        ssh ubuntu@3.16.108.201 /opt/tomcat/bin/startup.sh'''
+      }
+	  	  post{
+	  success{
+	        slackSend channel: 'nov-2021', message: "Deployment Success: ${JOB_NAME} and ${BUILD_URL}"
+			mail body: """Hi Team, The app is successfully Deployed
+            ${BUILD_URL}
+
+Thanks,
+PSD DevOps.
+""", subject: "${JOB_NAME} - Successfully Deployed", to: 'ppreddy2711@gmail.com'
+	  }
+	  failure{
+	        slackSend channel: 'nov-2021', message: "Deployment Failure: ${JOB_NAME} and ${BUILD_URL}"
+            mail body: """Hi Team, The application Deployment failure
+            ${BUILD_URL}
+
+Thanks,
+PSD DevOps.
+""", subject: "${JOB_NAME} - Deployment failure", to: 'ppreddy2711@gmail.com'
+	  }
+	  always{
+	    echo 'Control is entered to the post block'
+	  }
+    }
+	}
+  
+}
+
+}
