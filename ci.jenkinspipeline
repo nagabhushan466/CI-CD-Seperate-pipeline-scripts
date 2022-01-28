@@ -40,6 +40,9 @@ stages{
  stage("SONAR_SCANNER") {
       steps {
         echo 'Sonar scanning our code'
+	withSonarQubeEnv() {
+    sh "/opt/sonar-scanner/bin/sonar-scanner -Dsonar.language=java -Dsonar.projectName=citi -Dsonar.sourceEncoding=UTF-8 -Dsonar.projectKey=citi -Dsonar.projectVersion=${BUILD_TAG} -Dsonar.java.binaries=${WORKSPACE}/target/classes -Dsonar.sources=${WORKSPACE} -Dsonar.projectBaseDir=${WORKSPACE} -Dsonar.coverage.jacoco.xmlReportPaths=${WORKSPACE}/target/site/jacoco/jacoco.xml -Dsonar.junit.reportPaths=${WORKSPACE}/target/surefire-reports/*.xml"
+      }
       }
     }
 
