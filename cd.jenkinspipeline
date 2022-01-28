@@ -22,9 +22,9 @@ stage("DEPLOY") {
 		}
       steps {
 	    echo 'Deploying artifacts to tomcat server'
-		sh '''ssh ubuntu@3.16.108.201 /opt/tomcat/bin/shutdown.sh
-        scp -o StrictHostKeyChecking=no -r /var/lib/jenkins/workspace/ci_job/target/psdapp.war ubuntu@3.16.108.201:/opt/tomcat/webapps
-        ssh ubuntu@3.16.108.201 /opt/tomcat/bin/startup.sh'''
+		sh '''ssh ubuntu@18.216.120.175 /opt/tomcat/bin/shutdown.sh
+        scp -o StrictHostKeyChecking=no -r /var/lib/jenkins/workspace/ci_job/target/psdapp.war ubuntu@18.216.120.175:/opt/tomcat/webapps
+        ssh ubuntu@18.216.120.175 /opt/tomcat/bin/startup.sh'''
       }
 	  	  post{
 	  success{
